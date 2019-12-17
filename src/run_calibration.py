@@ -84,8 +84,8 @@ def model_predict(tslot):
  # extract correct offset from data based in tslot=0,...,T-1
  Zero=Variable(torch.DoubleTensor(2,2).zero_())
  boff=0
- rnorm=torch.DoubleTensor(1)
- inorm=torch.DoubleTensor(1)
+ rnorm=torch.DoubleTensor(1).zero_()
+ inorm=torch.DoubleTensor(1).zero_()
  for ci in range(0,N):
    for cj in range(ci+1,N):
     (Pr,Pi)=mult_AxBH(C[2*tslot:2*(tslot+1),:],Zero,Jr[2*cj:2*(cj+1),:],Ji[2*cj:2*(cj+1),:])
