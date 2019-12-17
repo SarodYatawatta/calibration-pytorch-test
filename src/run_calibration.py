@@ -98,9 +98,10 @@ def model_predict(tslot):
 
 
 
-optimizer=torch.optim.Adam([x],lr=0.1)
+#optimizer=torch.optim.Adam([x],lr=0.1)
 #optimizer=torch.optim.SGD([x],lr=0.001)
-#optimizer=torch.optim.LBFGS([x],history_size=7,max_iter=10,line_search_fn=True,batch_mode=True)
+from lbfgsnew import LBFGSNew # custom optimizer
+optimizer=LBFGSNew([x],history_size=7,max_iter=10,line_search_fn=True,batch_mode=True)
 
 
 # print initial cost
