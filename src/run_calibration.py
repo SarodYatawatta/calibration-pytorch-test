@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import torch
 import time
 from torch.autograd import Variable
@@ -16,8 +15,9 @@ torch.manual_seed(69)
 N=62
 # baselines
 B=N*(N-1)/2
-# timeslots
-T=10
+# timeslots (each timeslot is a minibatch)
+T=10 # T is the full batch size
+nepochs=10 # how many epochs
 
 # Jones matrices being estimated, created from leaf variable x
 x=torch.rand(8*N,requires_grad=True,dtype=torch.float64)
@@ -106,8 +106,9 @@ optimizer=LBFGSNew([x],history_size=7,max_iter=10,line_search_fn=True,batch_mode
 
 # print initial cost
 ll=model_predict(0)
-print('loss 00 =%f'%ll.item())
-for nepoch in range(0,10):
+print('time 0.00 epoch 00 tslot 00 loss %f'%ll.item())
+start_time=time.time()
+for nepoch in range(0,nepochs):
  for nt in range(0,T):
   def closure():
     if torch.is_grad_enabled():
@@ -119,4 +120,4 @@ for nepoch in range(0,10):
 
   optimizer.step(closure)
   current_loss=model_predict(nt)
-  print('epoch %d tslot %d loss %f'%(nepoch,nt,current_loss.item()))
+  print('time %f epoch %d tslot %d loss %f'%(time.time()-start_time,nepoch,nt,current_loss.item()))
