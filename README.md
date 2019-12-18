@@ -8,3 +8,5 @@ Files included are:
 ``` lbfgsnew.py ```: New LBFGS optimizer
 
 ``` run_calibration.py ```: Run a simple calibration
+
+<img src="time.png" alt="reduction of calibration cost" width="700"/>
