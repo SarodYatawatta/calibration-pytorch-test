@@ -10,3 +10,5 @@ Files included are:
 ``` run_calibration.py ```: Run a simple calibration
 
 <img src="time.png" alt="reduction of calibration cost" width="700"/>
+
+Here is an image showing the reduction of calibration error with iteration for LBFGS and Adam. Adam runs faster but slower to converge.
