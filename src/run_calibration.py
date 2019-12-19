@@ -18,8 +18,8 @@ B=N*(N-1)/2
 # timeslots (each timeslot is a minibatch)
 T=10 # T is the full batch size
 nepochs=4 # how many epochs
-# weather to use robust (Student's T) noise model instead of Gaussian (L2) noise model
-robust_noise=True
+# Whether to use robust (Student's T) noise model instead of Gaussian (L2) noise model
+robust_noise=True # if False, Gaussian noise model
 robust_nu=2.0 # nu in Student's T noise model
 
 # Jones matrices being estimated, created from leaf variable x
@@ -27,7 +27,7 @@ x=torch.rand(8*N,requires_grad=True,dtype=torch.float64)
 Jr=x[0:4*N].view(2*N,2)
 Ji=x[4*N:8*N].view(2*N,2)
 
-# Model (ground truth)
+# Model (ground truth) norm ~= 1
 Jmr=torch.DoubleTensor(2*N,2)
 Jmi=torch.DoubleTensor(2*N,2)
 Jmr.random_(0,1)
@@ -77,7 +77,7 @@ Ni=torch.randn(Vr.shape,dtype=torch.float64)
 Nr=Nr/Nr.norm()
 Ni=Ni/Ni.norm()
 
-# this is the simulated data
+# this is the simulated (noisy) data
 Vr=Vr+Nr*0.1*Vr.norm()
 Vi=Vi+Ni*0.1*Vi.norm()
 
