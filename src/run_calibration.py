@@ -82,7 +82,7 @@ Vr=Vr+Nr*0.1*Vr.norm()
 Vi=Vi+Ni*0.1*Vi.norm()
 
 
-# model evaluation function  - returns L2 loss of residual
+# model evaluation function  - returns L2 or Student's T loss of residual
 def model_predict(tslot):
  # extract correct offset from data based in tslot=0,...,T-1
  Zero=Variable(torch.DoubleTensor(2,2).zero_())
