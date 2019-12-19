@@ -17,7 +17,10 @@ N=62
 B=N*(N-1)/2
 # timeslots (each timeslot is a minibatch)
 T=10 # T is the full batch size
-nepochs=10 # how many epochs
+nepochs=4 # how many epochs
+# weather to use robust (Student's T) noise model instead of Gaussian (L2) noise model
+robust_noise=True
+robust_nu=2.0 # nu in Student's T noise model
 
 # Jones matrices being estimated, created from leaf variable x
 x=torch.rand(8*N,requires_grad=True,dtype=torch.float64)
@@ -75,8 +78,8 @@ Nr=Nr/Nr.norm()
 Ni=Ni/Ni.norm()
 
 # this is the simulated data
-Vr=Vr+Nr*0.01*Vr.norm()
-Vi=Vi+Ni*0.01*Vi.norm()
+Vr=Vr+Nr*0.1*Vr.norm()
+Vi=Vi+Ni*0.1*Vi.norm()
 
 
 # model evaluation function  - returns L2 loss of residual
@@ -90,23 +93,31 @@ def model_predict(tslot):
    for cj in range(ci+1,N):
     (Pr,Pi)=mult_AxBH(C[2*tslot:2*(tslot+1),:],Zero,Jr[2*cj:2*(cj+1),:],Ji[2*cj:2*(cj+1),:])
     (V01r,V01i)=mult_AxB(Jr[2*ci:2*(ci+1),:],Ji[2*ci:2*(ci+1),:],Pr,Pi)
-    rnorm=rnorm+(Vr[int(2*B*tslot)+2*boff:int(2*B*tslot)+2*(boff+1),:]-V01r).norm()**2
-    inorm=inorm+(Vi[int(2*B*tslot)+2*boff:int(2*B*tslot)+2*(boff+1),:]-V01i).norm()**2
+    if robust_noise:
+     rnorm=rnorm+torch.log(1.0+((Vr[int(2*B*tslot)+2*boff:int(2*B*tslot)+2*(boff+1),:]-V01r).norm()**2)/robust_nu)
+    else:
+     rnorm=rnorm+(Vr[int(2*B*tslot)+2*boff:int(2*B*tslot)+2*(boff+1),:]-V01r).norm()**2
+
+    if robust_noise:
+     inorm=inorm+torch.log(1.0+((Vi[int(2*B*tslot)+2*boff:int(2*B*tslot)+2*(boff+1),:]-V01i).norm()**2)/robust_nu)
+    else:
+     inorm=inorm+(Vi[int(2*B*tslot)+2*boff:int(2*B*tslot)+2*(boff+1),:]-V01i).norm()**2
     boff=boff+1
  # norm^2 of real+imag
  return rnorm+inorm
 
 
 
+# Select the optimizer to use
 #optimizer=torch.optim.Adam([x],lr=0.1)
 #optimizer=torch.optim.SGD([x],lr=0.001)
 from lbfgsnew import LBFGSNew # custom optimizer
-optimizer=LBFGSNew([x],history_size=7,max_iter=10,line_search_fn=True,batch_mode=True)
+optimizer=LBFGSNew([x],history_size=7,max_iter=4,line_search_fn=True,batch_mode=True)
 
 
 # print initial cost
 ll=model_predict(0)
-print('time 0.00 epoch 00 tslot 00 loss %f'%ll.item())
+print('time 0.00 epoch 00 tslot 00 loss %e'%ll.item())
 start_time=time.time()
 for nepoch in range(0,nepochs):
  for nt in range(0,T):
@@ -120,4 +131,4 @@ for nepoch in range(0,nepochs):
 
   optimizer.step(closure)
   current_loss=model_predict(nt)
-  print('time %f epoch %d tslot %d loss %f'%(time.time()-start_time,nepoch,nt,current_loss.item()))
+  print('time %f epoch %d tslot %d loss %e'%(time.time()-start_time,nepoch,nt,current_loss.item()))
