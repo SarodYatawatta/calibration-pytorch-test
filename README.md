@@ -11,4 +11,4 @@ Files included are:
 
 <img src="time.png" alt="reduction of calibration cost" width="700"/>
 
-Here is an image showing the reduction of calibration error (Student's T loss) with iteration for LBFGS and Adam. Adam runs faster but slower to converge. LBFGS uses 4 epochs and Adam uses 24 epochs in the image.
+Here is an image showing the reduction of calibration error (Student's T loss) with iteration for LBFGS and Adam. Adam runs faster but slower to converge. LBFGS uses 4 epochs and Adam uses 24 epochs in the image. The minibatch size is 1/10-th of the full dataset.
