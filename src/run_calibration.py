@@ -30,8 +30,8 @@ Ji=x[4*N:8*N].view(2*N,2)
 # Model (ground truth) norm ~= 1
 Jmr=torch.DoubleTensor(2*N,2)
 Jmi=torch.DoubleTensor(2*N,2)
-Jmr.random_(0,1)
-Jmi.random_(0,1)
+Jmr=Jmr.random_(0,10)/10.0
+Jmi=Jmi.random_(0,10)/10.0
 
 # visibilities
 Vr=torch.DoubleTensor(int(2*B*T),2)
