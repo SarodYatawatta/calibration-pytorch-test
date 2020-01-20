@@ -15,9 +15,11 @@ torch.manual_seed(69)
 N=62
 # baselines
 B=N*(N-1)/2
-# timeslots (each timeslot is a minibatch)
+# timeslots for full batch
 T=10 # T is the full batch size
-nepochs=4 # how many epochs
+# minibatch size in timeslots
+M=2 # should be in 1...T
+nepochs=2 # how many epochs
 # Whether to use robust (Student's T) noise model instead of Gaussian (L2) noise model
 robust_noise=True # if False, Gaussian noise model
 robust_nu=2.0 # nu in Student's T noise model
@@ -83,26 +85,30 @@ Vi=Vi+Ni*0.1*Vi.norm()
 
 
 # model evaluation function  - returns L2 or Student's T loss of residual
-def model_predict(tslot):
- # extract correct offset from data based in tslot=0,...,T-1
+def model_predict(tslot,mbsize=1):
+ # tslot: starting time slot: 0,...,T-1
+ # mbsize: minibatch size: 1,...,T
+ # extract correct offset from data based in tslot and mbsize
  Zero=Variable(torch.DoubleTensor(2,2).zero_())
- boff=0
  rnorm=torch.DoubleTensor(1).zero_()
  inorm=torch.DoubleTensor(1).zero_()
- for ci in range(0,N):
-   for cj in range(ci+1,N):
-    (Pr,Pi)=mult_AxBH(C[2*tslot:2*(tslot+1),:],Zero,Jr[2*cj:2*(cj+1),:],Ji[2*cj:2*(cj+1),:])
-    (V01r,V01i)=mult_AxB(Jr[2*ci:2*(ci+1),:],Ji[2*ci:2*(ci+1),:],Pr,Pi)
-    if robust_noise:
-     rnorm=rnorm+torch.log(1.0+((Vr[int(2*B*tslot)+2*boff:int(2*B*tslot)+2*(boff+1),:]-V01r).norm()**2)/robust_nu)
-    else:
-     rnorm=rnorm+(Vr[int(2*B*tslot)+2*boff:int(2*B*tslot)+2*(boff+1),:]-V01r).norm()**2
-
-    if robust_noise:
-     inorm=inorm+torch.log(1.0+((Vi[int(2*B*tslot)+2*boff:int(2*B*tslot)+2*(boff+1),:]-V01i).norm()**2)/robust_nu)
-    else:
-     inorm=inorm+(Vi[int(2*B*tslot)+2*boff:int(2*B*tslot)+2*(boff+1),:]-V01i).norm()**2
-    boff=boff+1
+ for nt in range(tslot,min(tslot+mbsize,T)):
+   boff=0
+   for ci in range(0,N):
+     for cj in range(ci+1,N):
+      (Pr,Pi)=mult_AxBH(C[2*nt:2*(nt+1),:],Zero,Jr[2*cj:2*(cj+1),:],Ji[2*cj:2*(cj+1),:])
+      (V01r,V01i)=mult_AxB(Jr[2*ci:2*(ci+1),:],Ji[2*ci:2*(ci+1),:],Pr,Pi)
+      if robust_noise:
+       rnorm=rnorm+torch.log(1.0+((Vr[int(2*B*nt)+2*boff:int(2*B*nt)+2*(boff+1),:]-V01r).norm()**2)/robust_nu)
+      else:
+       rnorm=rnorm+(Vr[int(2*B*nt)+2*boff:int(2*B*nt)+2*(boff+1),:]-V01r).norm()**2
+  
+      if robust_noise:
+       inorm=inorm+torch.log(1.0+((Vi[int(2*B*nt)+2*boff:int(2*B*nt)+2*(boff+1),:]-V01i).norm()**2)/robust_nu)
+      else:
+       inorm=inorm+(Vi[int(2*B*nt)+2*boff:int(2*B*nt)+2*(boff+1),:]-V01i).norm()**2
+      boff=boff+1
+      #print('boff =%d nt=%d'%(boff,nt))
  # norm^2 of real+imag
  return rnorm+inorm
 
@@ -116,19 +122,19 @@ optimizer=LBFGSNew([x],history_size=7,max_iter=4,line_search_fn=True,batch_mode=
 
 
 # print initial cost
-ll=model_predict(0)
-print('time 0.00 epoch 00 tslot 00 loss %e'%ll.item())
+ll=model_predict(0,M)
+print('time 0.00 epoch 00 tslot 00 loss %e'%(ll.item()/M))
 start_time=time.time()
 for nepoch in range(0,nepochs):
- for nt in range(0,T):
+ for nt in range(0,T,M): # step is minibatch size M
   def closure():
     if torch.is_grad_enabled():
        optimizer.zero_grad()
-    loss=model_predict(nt)
+    loss=model_predict(nt,M)
     if loss.requires_grad:
       loss.backward()
     return loss
 
   optimizer.step(closure)
   current_loss=model_predict(nt)
-  print('time %f epoch %d tslot %d loss %e'%(time.time()-start_time,nepoch,nt,current_loss.item()))
+  print('time %f epoch %d tslot %d loss %e'%(time.time()-start_time,nepoch,nt,(current_loss.item()/M)))
