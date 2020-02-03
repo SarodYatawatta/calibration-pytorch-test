@@ -24,23 +24,30 @@ nepochs=5 # how many epochs
 robust_noise=True # if False, Gaussian noise model
 robust_nu=2.0 # nu in Student's T noise model
 
+# (try to) use a GPU for computation?
+use_cuda=True
+if use_cuda and torch.cuda.is_available():
+  mydevice=torch.device('cuda')
+else:
+  mydevice=torch.device('cpu')
+
 # Jones matrices being estimated, created from leaf variable x
-x=torch.rand(8*N,requires_grad=True,dtype=torch.float64)
+x=torch.rand(8*N,requires_grad=True,dtype=torch.float64,device=mydevice)
 Jr=x[0:4*N].view(2*N,2)
 Ji=x[4*N:8*N].view(2*N,2)
 
 # Model (ground truth) norm ~= 1
-Jmr=torch.DoubleTensor(2*N,2)
-Jmi=torch.DoubleTensor(2*N,2)
+Jmr=torch.DoubleTensor(2*N,2).to(mydevice)
+Jmi=torch.DoubleTensor(2*N,2).to(mydevice)
 Jmr=Jmr.random_(0,10)/10.0
 Jmi=Jmi.random_(0,10)/10.0
 
 # visibilities
-Vr=torch.DoubleTensor(int(2*B*T),2)
-Vi=torch.DoubleTensor(int(2*B*T),2)
+Vr=torch.DoubleTensor(int(2*B*T),2).to(mydevice)
+Vi=torch.DoubleTensor(int(2*B*T),2).to(mydevice)
 
 # source coherency, at phase center, varying with time T
-C=torch.DoubleTensor(int(T*2),2).zero_()
+C=torch.DoubleTensor(int(T*2),2).zero_().to(mydevice)
 for ci in range(0,T):
  C[2*ci:2*(ci+1),:]=torch.eye(2)*math.cos(float(ci)*math.pi*0.1/T)
 
@@ -58,7 +65,7 @@ def mult_AxBH(Ar,Ai,Br,Bi):
 # produce model visibilities for all baselines, timeslots
 for nt in range(0,T):
  Ct=C[2*nt:2*(nt+1),:]
- Zero=torch.DoubleTensor(2,2).zero_()
+ Zero=torch.DoubleTensor(2,2).zero_().to(mydevice)
  boff=0
  for ci in range(0,N):
    Jpr=Jmr[2*ci:2*(ci+1),:]
@@ -74,8 +81,8 @@ for nt in range(0,T):
  
 
 # add noise 
-Nr=torch.randn(Vr.shape,dtype=torch.float64)
-Ni=torch.randn(Vr.shape,dtype=torch.float64)
+Nr=torch.randn(Vr.shape,dtype=torch.float64).to(mydevice)
+Ni=torch.randn(Vr.shape,dtype=torch.float64).to(mydevice)
 Nr=Nr/Nr.norm()
 Ni=Ni/Ni.norm()
 
@@ -89,9 +96,9 @@ def model_predict(tslot,mbsize=1):
  # tslot: starting time slot: 0,...,T-1
  # mbsize: minibatch size: 1,...,T
  # extract correct offset from data based in tslot and mbsize
- Zero=Variable(torch.DoubleTensor(2,2).zero_())
- rnorm=torch.DoubleTensor(1).zero_()
- inorm=torch.DoubleTensor(1).zero_()
+ Zero=Variable(torch.DoubleTensor(2,2).zero_()).to(mydevice)
+ rnorm=torch.DoubleTensor(1).zero_().to(mydevice)
+ inorm=torch.DoubleTensor(1).zero_().to(mydevice)
  #dynamically calculate total timeslots, in case mbsize exceeds T
  totalt=0.0
  for nt in range(tslot,min(tslot+mbsize,T)):
@@ -103,12 +110,12 @@ def model_predict(tslot,mbsize=1):
       if robust_noise:
        rnorm=rnorm+torch.log(1.0+((Vr[int(2*B*nt)+2*boff:int(2*B*nt)+2*(boff+1),:]-V01r).norm()**2)/robust_nu)
       else:
-       rnorm=rnorm+(Vr[int(2*B*nt)+2*boff:int(2*B*nt)+2*(boff+1),:]-V01r).norm()**2
+       rnorm=rnorm+((Vr[int(2*B*nt)+2*boff:int(2*B*nt)+2*(boff+1),:]-V01r).norm()**2)
   
       if robust_noise:
        inorm=inorm+torch.log(1.0+((Vi[int(2*B*nt)+2*boff:int(2*B*nt)+2*(boff+1),:]-V01i).norm()**2)/robust_nu)
       else:
-       inorm=inorm+(Vi[int(2*B*nt)+2*boff:int(2*B*nt)+2*(boff+1),:]-V01i).norm()**2
+       inorm=inorm+((Vi[int(2*B*nt)+2*boff:int(2*B*nt)+2*(boff+1),:]-V01i).norm()**2)
       boff=boff+1
       #print('boff =%d nt=%d'%(boff,nt))
    totalt=totalt+1.0
