@@ -1,7 +1,7 @@
 # Radio interferometric calibration with PyTorch
 This is a simple example to compare popular optimizers used in deep learning (Adam etc.) with stochastic LBFGS.
 
-The stochastic LBFGS optimizer is provided with the code. Further details are given [in this paper](https://ieeexplore.ieee.org/document/8755567). Also see [this introduction](http://sagecal.sourceforge.net/pytorch/index.html).
+The stochastic LBFGS optimizer is provided with the code. Further details are given [in this paper](https://ieeexplore.ieee.org/document/8755567) and [also this](https://arxiv.org/abs/2003.00986). Also see [this introduction](http://sagecal.sourceforge.net/pytorch/index.html).
 
 Files included are:
 
