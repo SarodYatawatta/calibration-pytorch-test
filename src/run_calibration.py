@@ -63,22 +63,23 @@ def mult_AxBH(Ar,Ai,Br,Bi):
 
 
 # produce model visibilities for all baselines, timeslots
-for nt in range(0,T):
- Ct=C[2*nt:2*(nt+1),:]
- Zero=torch.DoubleTensor(2,2).zero_().to(mydevice)
- boff=0
- for ci in range(0,N):
-   Jpr=Jmr[2*ci:2*(ci+1),:]
-   Jpi=Jmi[2*ci:2*(ci+1),:]
-   for cj in range(ci+1,N):
-    Jqr=Jmr[2*cj:2*(cj+1),:]
-    Jqi=Jmi[2*cj:2*(cj+1),:]
-    (Pr,Pi)=mult_AxBH(Ct,Zero,Jqr,Jqi)
-    (V01r,V01i)=mult_AxB(Jpr,Jpi,Pr,Pi)
-    Vr[int(2*B*nt)+2*boff:int(2*B*nt)+2*(boff+1),:]=V01r
-    Vi[int(2*B*nt)+2*boff:int(2*B*nt)+2*(boff+1),:]=V01i
-    boff=boff+1
- 
+with torch.no_grad():
+ for nt in range(0,T):
+  Ct=C[2*nt:2*(nt+1),:]
+  Zero=torch.DoubleTensor(2,2).zero_().to(mydevice)
+  boff=0
+  for ci in range(0,N):
+    Jpr=Jmr[2*ci:2*(ci+1),:]
+    Jpi=Jmi[2*ci:2*(ci+1),:]
+    for cj in range(ci+1,N):
+     Jqr=Jmr[2*cj:2*(cj+1),:]
+     Jqi=Jmi[2*cj:2*(cj+1),:]
+     (Pr,Pi)=mult_AxBH(Ct,Zero,Jqr,Jqi)
+     (V01r,V01i)=mult_AxB(Jpr,Jpi,Pr,Pi)
+     Vr[int(2*B*nt)+2*boff:int(2*B*nt)+2*(boff+1),:]=V01r
+     Vi[int(2*B*nt)+2*boff:int(2*B*nt)+2*(boff+1),:]=V01i
+     boff=boff+1
+  del Zero,Ct,Jpr,Jpi,Jqr,Jqi,Pr,Pi
 
 # add noise 
 Nr=torch.randn(Vr.shape,dtype=torch.float64).to(mydevice)
@@ -90,6 +91,7 @@ Ni=Ni/Ni.norm()
 Vr=Vr+Nr*0.1*Vr.norm()
 Vi=Vi+Ni*0.1*Vi.norm()
 
+del Nr,Ni
 
 # model evaluation function  - returns L2 or Student's T loss of residual
 def model_predict(tslot,mbsize=1):
@@ -119,6 +121,8 @@ def model_predict(tslot,mbsize=1):
       boff=boff+1
       #print('boff =%d nt=%d'%(boff,nt))
    totalt=totalt+1.0
+
+ del Zero,Pr,Pi,V01r,V01i
  # norm^2 of real+imag
  return (rnorm+inorm)/totalt
 
