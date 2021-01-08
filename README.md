@@ -13,4 +13,6 @@ Files included are:
 
 Here is an image showing the reduction of calibration error (Student's T loss) with minibatch (CPU time) for LBFGS and Adam. Adam runs faster but slower to converge. LBFGS uses 1 epoch and Adam uses 4 epochs in the image. The minibatch size is 1/10-th of the full dataset.
 
+For a much faster, C/CUDA version of the LBFGS optimizer, follow [this link](https://github.com/nlesc-dirac/sagecal/tree/master/test/Dirac).
+
 For a completely different method to calibrate, see also [ManOpt](https://github.com/NicolasBoumal/manopt/blob/master/examples/radio_interferometric_calibration.m).
