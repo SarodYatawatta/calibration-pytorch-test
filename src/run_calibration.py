@@ -1,15 +1,27 @@
+#! /usr/bin/env python
+
 import numpy as np
 import torch
 import time
 from torch.autograd import Variable
 import math
+import argparse
 
 # A simple radio interferometric calibration in PyTorch
 # Useful for comparing various optimizers (used in deep learing) in calibration
 
+parser=argparse.ArgumentParser(
+    description='Run calibration with different solvers',
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+parser.add_argument('--seed',type=int,default=1,metavar='S',
+        help='Initial random seed')
+parser.add_argument("--solver_name", default="LBFGS", help='solver names: LBFGS, LBFGSB, SGD, ADAM')  #
+args=parser.parse_args()
+
 
 # use same random initialization for comparisons
-torch.manual_seed(69)
+torch.manual_seed(args.seed)
 
 # stations
 N=62
@@ -129,13 +141,21 @@ def model_predict(tslot,mbsize=1):
 
 
 # Select the optimizer to use
-#optimizer=torch.optim.Adam([x],lr=0.1)
-#optimizer=torch.optim.SGD([x],lr=0.001)
-from lbfgsnew import LBFGSNew # custom optimizer
-if M>=T: # fullbatch mode
- optimizer=LBFGSNew([x],history_size=7,max_iter=4,line_search_fn=True,batch_mode=False)
-else:
- optimizer=LBFGSNew([x],history_size=7,max_iter=4,line_search_fn=True,batch_mode=True)
+match args.solver_name:
+    case 'LBFGS':
+       from lbfgsnew import LBFGSNew # custom optimizer
+       optimizer=LBFGSNew([x],history_size=7,max_iter=4,line_search_fn=True,batch_mode=(M<T))
+    case 'LBFGSB':
+       from lbfgsb import LBFGSB
+       x_l=torch.ones(8*N,device=mydevice)*(-100.0)
+       x_u=torch.ones(8*N,device=mydevice)*(100.0)
+       optimizer=LBFGSB([x],lower_bound=x_l, upper_bound=x_u, history_size=7,max_iter=4,batch_mode=(M<T))
+    case 'SGD':
+       optimizer=torch.optim.SGD([x],lr=0.001)
+    case 'ADAM':
+       optimizer=torch.optim.Adam([x],lr=0.1)
+    case _:
+       print('Error: undefined solver type')
 
 
 # print initial cost

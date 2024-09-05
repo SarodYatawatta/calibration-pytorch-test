@@ -7,7 +7,11 @@ Files included are:
 
 ``` lbfgsnew.py ```: New LBFGS optimizer
 
-``` run_calibration.py ```: Run a simple calibration
+``` run_calibration.py ```: Run a simple calibration, like
+
+``` 
+run_calibration.py --solver_name=LBFGSB 
+```
 
 <img src="time.png" alt="reduction of calibration cost" width="700"/>
 
