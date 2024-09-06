@@ -556,7 +556,7 @@ class LBFGSB(Optimizer):
             y=g-g_old
             x=torch.cat(self._copy_params_out(),0)
             s=x-x_old
-            curv=abs(torch.dot(s,y))
+            curv=(torch.dot(s,y))
             n_iter +=1
             state['n_iter'] +=1
 
@@ -573,7 +573,8 @@ class LBFGSB(Optimizer):
 
 
             if (curv<self._eps):
-                print('Warning: negative curvature detected, skipping update')
+                if be_verbose:
+                   print('Warning: negative curvature detected, skipping update')
                 n_iter+=1
                 continue
             # in batch mode, do not update Y and S if the batch has changed
