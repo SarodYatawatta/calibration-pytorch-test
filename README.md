@@ -7,11 +7,16 @@ Files included are:
 
 ``` lbfgsnew.py ```: New LBFGS optimizer
 
+``` lbfgsb.py ```: Bound constrained LBFGS optimizer
+
 ``` run_calibration.py ```: Run a simple calibration, like
 
 ``` 
 run_calibration.py --solver_name=LBFGSB 
 ```
+
+Available options for ```--solver_name``` are ```LBFGS, LBFGSB, SGD, ADAM```.
+
 
 <img src="time.png" alt="reduction of calibration cost" width="700"/>
 
