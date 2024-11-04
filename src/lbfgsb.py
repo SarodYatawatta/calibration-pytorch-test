@@ -317,7 +317,7 @@ class LBFGSB(Optimizer):
         v=torch.mm(self._M,torch.mm(WtZ,r))
         N=invtheta*torch.mm(WtZ,WtZ.transpose(0,1))
         N=torch.eye(2*self._m).to(self._device)-torch.mm(self._M,N)
-        v,_,_,_=torch.linalg.lstsq(N,v,rcond=-1)
+        v,_,_,_=torch.linalg.lstsq(N,v,rcond=None)
         du=-invtheta*r-invtheta*invtheta*torch.mm(WtZ.transpose(0,1),v)
 
         alpha_star=self._find_alpha(xc,du,free_vars_index)
