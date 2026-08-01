@@ -20,7 +20,7 @@ Available options for ```--solver_name``` are ```LBFGS, LBFGSB, SGD, ADAM```.
 
 <img src="time.png" alt="reduction of calibration cost" width="700"/>
 
-Here is an image showing the reduction of calibration error (Student's T loss) with minibatch (CPU time) for LBFGS and Adam. Adam runs faster but slower to converge. LBFGS uses 1 epoch and Adam uses 4 epochs in the image. The minibatch size is 1/10-th of the full dataset.
+Here is an image showing the reduction of calibration error (Student's T loss) with minibatch (CPU time) for LBFGS, LBFGSB, SGD and Adam. Adam runs faster but slower to converge. LBFGS uses 1 epoch and Adam uses 4 epochs in the image. The minibatch size is 1/10-th of the full dataset.
 
 For a much faster, C/CUDA version of the LBFGS optimizer, follow [this link](https://github.com/nlesc-dirac/sagecal/tree/master/test/Dirac).
 
